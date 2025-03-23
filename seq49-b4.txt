@@ -1,0 +1,178 @@
+P := 7;
+M := 2;
+F := 2;
+E := (P-1)/F;
+N := 1;
+
+//计算N=P^M
+for i in [1..M] do
+    N *:= P;
+end for;
+
+N1 :=[Integers()|];
+tempN1 := P;
+for i in [1..M] do
+    Append(~N1,tempN1);
+    tempN1 *:= P;
+end for;
+
+D := [[[Integers()|]]];
+DD:=[[[Integers()|]]];
+
+i := 1;
+repeat
+    i +:= 1;
+    j := 0;
+    temp := 1;
+    repeat
+        j +:= 1;
+        temp := (temp*i) mod P^2;
+    until temp eq 1;
+until j eq P*(P-1);
+g := i;
+print "g=", g;
+
+
+//计算分圆类
+for k in [1..M-1] do
+    Append(~D,[[]]);
+    Append(~DD,[[]]);
+end for;
+
+P1:=1;
+for k in [M..1 by -1] do
+    gp := 1;
+    for i in [1..(F*N1[k]) div P] do
+        gp := (gp*g) mod N1[k];
+    end for;
+
+    D[k][1][1] := 1;
+    DD[k][1][1]:=P1*D[k][1][1];
+    for i in [2..(P-1) div F] do
+        D[k][1][i] := (D[k][1][i-1]*gp) mod N1[k];
+        DD[k][1][i]:=P1*D[k][1][i];
+    end for;
+
+    for j in [1..((F*N1[k]) div P)-1] do
+        Append(~D[k],[]);
+        Append(~DD[k],[]);
+        D[k][j+1][1]:=g*D[k][j][1] mod N1[k];
+        DD[k][j+1][1]:=P1*D[k][j+1][1];
+        for i in [2..(P-1) div F] do
+            D[k][j+1][i] := (g*D[k][j][i]) mod N1[k];
+            DD[k][j+1][i]:=P1*D[k][j+1][i];
+         end for;
+     end for;
+   P1*:=P;
+end for;
+
+//输出分圆类到文件date3.txt
+File:=Open("date3.txt","w");
+fprintf File,"%o^%o，本原元：%o\n", P,M,g;
+
+for k in [M..1 by -1] do
+    fprintf File,"M=%o时的分圆类:\n",k;
+ 
+    fprintf File,"    D[0]=\{%o",DD[k][1][1];
+    for i in [2..(P-1) div F] do
+        fprintf File, ",%o",DD[k][1][i];
+    end for;
+    fprintf File, "\}\n";
+    for j in [1..((F*N1[k]) div P)-1] do
+         fprintf File,"    D[%o]=\{%o",j,DD[k][j+1][1];
+        for i in [2..(P-1) div F] do
+            fprintf File,",%o",DD[k][j+1][i];
+         end for;
+         fprintf File,"\}\n";
+    end for;
+end for;
+delete File;
+
+F2:=FiniteField(2);
+PP<x>:=PolynomialRing(F2);
+tm:=Order(2,N);
+//tm;
+C<x> :=PrimitivePolynomial(F2,tm);
+F<w>:=ext<F2|C>;
+print "C=", C;
+
+lm:=(2^tm-1) div N;
+//lm;
+v:=w^lm;
+print "v=", v; //v是49次本原单位根
+//v^49;
+//v^7;
+
+//以下代码根据m的值来改写
+//m=3
+SF1<u1>:=sub<F | v^P>;
+SF2<u2>:=sub<F | v^(P^2)>;
+//SF3<u3>:=sub<F | v^(P^3)>;
+//u1^7;
+
+AA:=[[F|]];
+for k in [1..M-1] do
+    Append(~AA,[]);
+end for;
+
+for k in [1..M] do
+    i:=0;
+    for D2 in DD[k] do
+        i:=i+1;
+        AA[k][i]:=0;
+        for j in D2 do
+            AA[k][i]:=AA[k][i]+v^j;
+        end for;
+    end for;
+end for;
+
+//可以调整start         
+BB:=[F|];
+
+//如果start=0，等于从数组中的位置1开始
+start:=0;
+for k in [1..M] do
+    BB[k]:=0;
+    Number:=#DD[k];
+    for i:=0 to (Number div 2) - 1 do
+       BB[k]:=BB[k]+AA[k][((start+i) mod Number) + 1];
+    end for;
+end for;
+        
+a0:=v^7+v^14+v^28;
+print "a0=", a0;
+a1 :=v^21+v^35+v^42;
+print "a1=", a1;
+//a0+a1;
+
+c0:=v^1+v^18+v^30;
+c1:=v^3+v^5+v^41;
+c2:=v^15+v^9+v^25;
+c3:=v^45+v^27+v^26;
+c4:=v^37+v^32+v^29;
+c5:=v^13+v^47+v^38;
+c6:=v^39+v^43+v^16;
+c7:=v^48+v^19+v^31;
+c8:=v^44+v^46+v^8;
+c9:=v^34+v^40+v^24;
+c10:=v^4+v^22+v^23;
+c11:=v^12+v^17+v^20;
+c12:=v^36+v^2+v^11;
+c13:=v^10+v^6+v^33;
+b0:=c0+c1+c2+c3+c4+c5+c6;
+//b0;
+b1:=c1+c2+c3+c4+c5+c6+c7;
+B0:=a0+b0;
+B1:=a1+b1;
+E0:=a0+c4+c5+c6+c7+c8+c9+c10;
+print "E0=", E0;
+E1:=a1+c5+c6+c7+c8+c9+c10+c11;
+print "E1=", E1;
+
+s:=[Integers()|];
+  for i in [0..48] do
+     elem:=1+Trace(a0*(u1^i))+Trace(a1*(u1^(g*i)))+Trace(E0*(v^i))+Trace(E1*(v^(g*i)));
+     Append(~s,elem);
+  end for;
+print "s=", s;//b取4时的序列
+
